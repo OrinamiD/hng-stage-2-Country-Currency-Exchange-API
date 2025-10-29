@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm ci --include=dev --cache /tmp/.npm --no-audit --no-fund && node ./node_modules/.bin/tsc",
+    "build": "npx tsc",
     "prestart": "npm run build",
-    "start": "node dist/index.js",
+    "start": "npm run build && node dist/index.js",
     "predev": "npm run build",
     "dev": "concurrently \"npx tsc -w\" \"nodemon dist/index.js\""
   },
