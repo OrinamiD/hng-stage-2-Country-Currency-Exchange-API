@@ -1,34 +1,28 @@
-# Use official Node.js 18 (LTS) with Alpine for smaller image
-FROM node:18-alpine AS builder
+# Use official Node 18 on Alpine Linux
+FROM node:18-alpine
+
+# Install system dependencies required for canvas
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    cairo-dev \
+    pango-dev \
+    jpeg-dev \
+    giflib-dev \
+    librsvg-dev
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files first (for better caching)
+# Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies for tsc)
-# Use /tmp for npm cache to avoid EBUSY/locked issues
-RUN npm ci --include=dev --cache /tmp/.npm --no-audit --no-fund
+# Install dependencies + rebuild canvas for Linux
+RUN npm ci && npm rebuild canvas --verbose
 
-# Copy source code
-COPY . .
-
-# Compile TypeScript
-RUN node ./node_modules/.bin/tsc
-
-# === PRODUCTION STAGE ===
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Copy only necessary files from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-
-# Optional: Expose port (change if needed)
-EXPOSE 3000
+# Copy your compiled JS
+COPY dist ./dist
 
 # Start the app
 CMD ["node", "dist/index.js"]
